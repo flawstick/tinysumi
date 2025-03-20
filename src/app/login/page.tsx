@@ -1,56 +1,24 @@
 "use client";
 
 import type React from "react";
-
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Heart, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Heart, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    // Simple validation
-    if (!username || !password) {
-      setError("Please enter both username and password");
-      setIsLoading(false);
-      return;
-    }
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // For demo purposes - hardcoded credentials
-    // In a real app, this would be a server-side authentication
-    if (username === "girlfriend" && password === "loveyou") {
-      router.push("/");
-    } else {
-      setError("Invalid username or password");
-    }
-
-    setIsLoading(false);
+  const handleDiscordLogin = async () => {
+    await signIn("discord", { callbackUrl: "/" });
   };
 
   return (
@@ -77,7 +45,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-pink-700">Welcome Back!</h1>
           <p className="mt-2 text-pink-600">
-            Sign in to see all our special memories
+            Sign in with Discord to see all our special memories
           </p>
         </div>
 
@@ -85,79 +53,26 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-pink-700">Login</CardTitle>
             <CardDescription>
-              Enter your details to access your account
+              Click below to sign in with your Discord account
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleLogin}>
-            <CardContent className="space-y-4">
-              {error && (
-                <Alert
-                  variant="destructive"
-                  className="border-red-200 bg-red-50 text-red-800"
-                >
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-pink-700">
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="border-pink-200 focus:border-pink-400 focus:ring-pink-400"
-                  placeholder="Enter your username"
-                  autoComplete="username"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-pink-700">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="border-pink-200 pr-10 focus:border-pink-400 focus:ring-pink-400"
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                type="submit"
-                className="w-full bg-pink-500 hover:bg-pink-600"
-                disabled={isLoading}
+          <CardContent className="space-y-4">
+            <Button
+              onClick={handleDiscordLogin}
+              className="w-full bg-[#5865F2] hover:bg-[#4752C4]"
+            >
+              <svg
+                className="mr-2 h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 127.14 96.36"
+                fill="currentColor"
               >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </CardFooter>
-          </form>
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z" />
+              </svg>
+              Sign in with Discord
+            </Button>
+          </CardContent>
         </Card>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-pink-600">
-            Hint: Username is "girlfriend" and password is "loveyou" 💕
-          </p>
-        </div>
       </motion.div>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 text-center text-pink-600">

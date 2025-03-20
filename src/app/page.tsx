@@ -18,7 +18,6 @@ import { FloatingNav } from "./_components/floating-nav";
 import { AnimatedSection } from "./_components/animated-section";
 import { motion } from "framer-motion";
 import { useRef } from "react";
-import { HydrateClient } from "@/trpc/server";
 
 const navItems = [
   {
@@ -27,19 +26,9 @@ const navItems = [
     icon: <Home className="h-4 w-4 text-pink-500" />,
   },
   {
-    name: "Photos",
-    link: "#photos",
-    icon: <ImageIcon className="h-4 w-4 text-pink-500" />,
-  },
-  {
     name: "Memories",
-    link: "#memories",
+    link: "/memories",
     icon: <Camera className="h-4 w-4 text-pink-500" />,
-  },
-  {
-    name: "About Us",
-    link: "#about",
-    icon: <User className="h-4 w-4 text-pink-500" />,
   },
   {
     name: "Tasks",
@@ -60,7 +49,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white">
+    <main className="min-h-screen bg-white">
       <FloatingNav navItems={navItems} />
 
       <header className="relative flex h-screen items-center justify-center overflow-hidden">
@@ -210,7 +199,7 @@ export default function HomePage() {
             {[1, 2, 3, 4].map((i) => (
               <Card
                 key={i}
-                className="group overflow-hidden border-pink-200 shadow-md transition-all duration-300 hover:shadow-lg"
+                className="group overflow-hidden border-pink-200 bg-transparent shadow-md transition-all duration-300 hover:shadow-lg"
               >
                 <div className="relative aspect-video overflow-hidden">
                   <Image

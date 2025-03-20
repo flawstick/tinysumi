@@ -13,7 +13,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { FloatingNav } from "../_components/floating-nav";
+import { FloatingNav } from "@/app/_components/floating-nav";
 import { Home, ListTodo, Heart } from "lucide-react";
 
 // Define task status types
@@ -172,10 +172,10 @@ export default function TasksPage() {
                   task.status === "completed"
                     ? "border-l-green-500"
                     : task.status === "in_progress"
-                    ? "border-l-blue-500"
-                    : task.status === "paused"
-                    ? "border-l-yellow-500"
-                    : "border-l-gray-300"
+                      ? "border-l-blue-500"
+                      : task.status === "paused"
+                        ? "border-l-yellow-500"
+                        : "border-l-gray-300"
                 }`}
               >
                 <CardContent className="p-4">

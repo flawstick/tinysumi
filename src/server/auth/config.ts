@@ -11,6 +11,16 @@ import {
 } from "@/server/db/schema";
 
 /**
+ * this app is only for tiny and her owner
+ * so, we only allow the owner to and her to sign in
+ */
+export type UserRole = "daddy" | "tiny";
+export const allowedUsers: string[] = [
+  "678386127899590659",
+  "647127398961250316",
+];
+
+/**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
  *
@@ -20,8 +30,7 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
+      role: UserRole;
     } & DefaultSession["user"];
   }
 
@@ -37,17 +46,14 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  pages: {
+    signIn: "/login",
+  },
   providers: [
-    DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    DiscordProvider({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+    }),
   ],
   adapter: DrizzleAdapter(db, {
     usersTable: users,
@@ -56,6 +62,9 @@ export const authConfig = {
     verificationTokensTable: verificationTokens,
   }),
   callbacks: {
+    signIn: async ({ account }) => {
+      return allowedUsers.includes(account!.providerAccountId.toString());
+    },
     session: ({ session, user }) => ({
       ...session,
       user: {

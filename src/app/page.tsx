@@ -216,9 +216,9 @@ export default function HomePage() {
               </div>
               <CardContent className="py-4">
                 <p className="text-pink-700">
-                  I love playing Valorant! My main agents are Jett and Sage. I'm
-                  not the best player, but I have a lot of fun, especially when
-                  playing with my boyfriend.
+                  I love playing Valorant! My main agents are Clove and Tejo.
+                  I'm not the best player, but I have a lot of fun, especially
+                  when playing with my boyfriend.
                 </p>
               </CardContent>
             </Card>

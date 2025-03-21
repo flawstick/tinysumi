@@ -4,11 +4,11 @@ import Image from "next/image";
 import {
   Heart,
   Camera,
-  Calendar,
-  Music,
   Home,
   ListTodo,
   ChevronDown,
+  BookOpen,
+  Coffee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,9 @@ import { FloatingNav } from "./_components/floating-nav";
 import { AnimatedSection } from "./_components/animated-section";
 import { motion } from "framer-motion";
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/trpc/react";
+import { useSession } from "next-auth/react";
 
 const navItems = [
   {
@@ -36,6 +39,9 @@ const navItems = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  const { data: verse, isLoading: isVerseLoading } =
+    api.bible.getDailyVerse.useQuery();
   const aboutSectionRef = useRef<HTMLDivElement>(null);
 
   // Function to scroll to the about section
@@ -46,14 +52,16 @@ export default function HomePage() {
     });
   };
 
+  const session = useSession();
+
   return (
-    <main className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white">
       <FloatingNav navItems={navItems} />
 
       <header className="relative flex h-screen items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-pink-100 opacity-70"></div>
-          <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center"></div>
+          <div className="absolute inset-0 bg-[url('/hk.jpg')] bg-cover bg-center"></div>
         </div>
 
         <div className="container relative z-10 mx-auto flex flex-col items-center px-4 text-center">
@@ -64,12 +72,7 @@ export default function HomePage() {
             className="mb-8"
           >
             <div className="relative mx-auto mb-6 h-40 w-40 overflow-hidden rounded-full border-4 border-white shadow-xl">
-              <Image
-                src="/placeholder.svg?height=160&width=160"
-                alt="Your Girlfriend"
-                fill
-                className="object-cover"
-              />
+              <Image src="/hk.gif" alt="Sumi" fill className="object-cover" />
             </div>
           </motion.div>
 
@@ -79,7 +82,7 @@ export default function HomePage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mb-4 text-5xl font-bold text-pink-700 md:text-6xl"
           >
-            For My Special Someone
+            Hi, I'm Sumi!
           </motion.h1>
 
           <motion.p
@@ -88,19 +91,23 @@ export default function HomePage() {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="mx-auto mb-8 max-w-2xl text-xl text-pink-600"
           >
-            I made this cute little website just for you. Because you're amazing
-            and deserve something as sweet as you are!
+            Christian • Valorant Player • Tiny
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
-            <Button className="rounded-full bg-pink-500 px-8 py-6 text-lg text-white shadow-lg transition-all duration-300 hover:bg-pink-600 hover:shadow-xl">
-              I ❤️ You!
-            </Button>
-          </motion.div>
+          {!!session && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              <Button
+                className="rounded-full bg-pink-500 px-8 py-6 text-lg text-white shadow-lg transition-all duration-300 hover:bg-pink-600 hover:shadow-xl"
+                onClick={() => router.push("/littlespace")}
+              >
+                My Tasks <ListTodo className="ml-2 h-5 w-5" />
+              </Button>
+            </motion.div>
+          )}
         </div>
 
         {/* Scroll down indicator - without text */}
@@ -116,10 +123,7 @@ export default function HomePage() {
             <div className="rounded-full border border-pink-200 bg-white/80 p-3 shadow-md backdrop-blur-sm transition-all group-hover:bg-white group-hover:shadow-lg">
               <motion.div
                 animate={{ y: [0, 5, 0] }}
-                transition={{
-                  repeat: Number.POSITIVE_INFINITY,
-                  duration: 1.5,
-                }}
+                transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}
               >
                 <ChevronDown className="h-6 w-6 text-pink-500" />
               </motion.div>
@@ -131,7 +135,7 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-16">
         <AnimatedSection className="mb-24" id="about" ref={aboutSectionRef}>
           <h2 className="mb-12 text-center text-3xl font-bold text-pink-600 md:text-4xl">
-            Our Story
+            About Me
           </h2>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -141,13 +145,13 @@ export default function HomePage() {
                   <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
                 </div>
                 <CardTitle className="text-center text-xl text-pink-600">
-                  How We Met
+                  Relationship
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center text-pink-700">
                 <p>
-                  A little section about how we met and all our special moments
-                  together.
+                  My favorite hobby is talking to my amazing boyfriend. He's my
+                  best friend and the love of my life! 💕
                 </p>
               </CardContent>
             </Card>
@@ -155,16 +159,16 @@ export default function HomePage() {
             <Card className="border-pink-200 bg-white/80 shadow-md backdrop-blur-sm transition-shadow hover:shadow-lg">
               <CardHeader className="pb-2">
                 <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
-                  <Calendar className="h-6 w-6 text-pink-500" />
+                  <BookOpen className="h-6 w-6 text-pink-500" />
                 </div>
                 <CardTitle className="text-center text-xl text-pink-600">
-                  Special Dates
+                  Faith
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center text-pink-700">
                 <p>
-                  All the important dates and anniversaries we celebrate
-                  together.
+                  My Christian faith is an important part of who I am. I love
+                  attending church and reading scripture. ✝️
                 </p>
               </CardContent>
             </Card>
@@ -172,75 +176,77 @@ export default function HomePage() {
             <Card className="border-pink-200 bg-white/80 shadow-md backdrop-blur-sm transition-shadow hover:shadow-lg">
               <CardHeader className="pb-2">
                 <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
-                  <Music className="h-6 w-6 text-pink-500" />
+                  <Coffee className="h-6 w-6 text-pink-500" />
                 </div>
                 <CardTitle className="text-center text-xl text-pink-600">
-                  Our Playlist
+                  Fun Facts
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center text-pink-700">
                 <p>
-                  The songs that remind us of each other and our special
-                  moments.
+                  I'm very short but full of energy! I love cute things, the
+                  color pink, and drinking bubble-less redbull.
                 </p>
               </CardContent>
             </Card>
           </div>
         </AnimatedSection>
 
-        <AnimatedSection className="mb-24" delay={0.3} id="memories">
+        <AnimatedSection className="mb-24" delay={0.3} id="hobbies">
           <h2 className="mb-12 text-center text-3xl font-bold text-pink-600 md:text-4xl">
-            Favorite Memories
+            My Hobbies
           </h2>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => (
-              <Card
-                key={i}
-                className="group overflow-hidden border-pink-200 bg-transparent shadow-md transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="relative aspect-video overflow-hidden">
-                  <Image
-                    src={`/placeholder.svg?height=400&width=600`}
-                    alt={`Memory ${i}`}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <CardContent className="py-4">
-                  <h3 className="mb-2 text-lg font-semibold text-pink-600">
-                    Memory Title {i}
-                  </h3>
-                  <p className="text-pink-700">
-                    A short description of this wonderful memory we shared
-                    together.
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection className="mb-24" delay={0.4} id="photos">
-          <h2 className="mb-12 text-center text-3xl font-bold text-pink-600 md:text-4xl">
-            Photo Gallery
-          </h2>
-
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.05 }}
-                className="relative aspect-square overflow-hidden rounded-lg shadow-md"
-              >
+            <Card className="group overflow-hidden border-pink-200 shadow-md transition-all duration-300 hover:shadow-lg">
+              <div className="relative aspect-video overflow-hidden">
                 <Image
-                  src={`/placeholder.svg?height=300&width=300`}
-                  alt={`Photo ${i}`}
+                  src="/giphy.webp"
+                  alt="Valorant"
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-              </motion.div>
-            ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-xl font-bold text-white">Valorant</h3>
+                  <p className="text-sm text-white/90">
+                    My favorite game to play
+                  </p>
+                </div>
+              </div>
+              <CardContent className="py-4">
+                <p className="text-pink-700">
+                  I love playing Valorant! My main agents are Jett and Sage. I'm
+                  not the best player, but I have a lot of fun, especially when
+                  playing with my boyfriend.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group overflow-hidden border-pink-200 shadow-md transition-all duration-300 hover:shadow-lg">
+              <div className="relative aspect-video overflow-hidden">
+                <Image
+                  src="/happy.gif"
+                  alt="Chatting"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-xl font-bold text-white">
+                    Talking with My Boyfriend
+                  </h3>
+                  <p className="text-sm text-white/90">My favorite person</p>
+                </div>
+              </div>
+              <CardContent className="py-4">
+                <p className="text-pink-700">
+                  My absolute favorite thing to do is talk with my boyfriend.
+                  Whether we're video chatting, texting, or spending time
+                  together, it's always the highlight of my day!
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </AnimatedSection>
 
@@ -249,16 +255,24 @@ export default function HomePage() {
           delay={0.5}
         >
           <h2 className="mb-8 text-3xl font-bold text-pink-600 md:text-4xl">
-            A Little Note
+            Daily Verse
           </h2>
           <Card className="border-pink-200 bg-white/80 shadow-md backdrop-blur-sm">
             <CardContent className="pt-6">
-              <p className="mb-6 text-lg italic text-pink-700">
-                "Every day with you is like a beautiful dream I never want to
-                wake up from. You make my heart smile in ways I never thought
-                possible."
-              </p>
-              <p className="font-medium text-pink-600">With all my love ❤️</p>
+              {isVerseLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-4 border-pink-300 border-t-pink-600"></div>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-6 text-lg italic text-pink-700">
+                    "{verse?.text ?? "Loading verse..."}"
+                  </p>
+                  <p className="font-medium text-pink-600">
+                    {verse?.reference} ({verse?.version}) ✝️
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </AnimatedSection>
@@ -266,9 +280,7 @@ export default function HomePage() {
 
       <footer className="bg-gradient-to-r from-pink-100 via-pink-200 to-pink-100 px-4 py-8">
         <div className="container mx-auto text-center">
-          <p className="mb-4 text-pink-700">
-            Made with love for the most amazing person in my world
-          </p>
+          <p className="mb-4 text-pink-700">Made with love for Sumi</p>
           <motion.div
             className="flex justify-center space-x-2"
             animate={{ scale: [1, 1.1, 1] }}
@@ -285,6 +297,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }

@@ -12,38 +12,29 @@ import {
   ChevronRight,
   Camera,
   MapPin,
+  Home,
+  ListTodo,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FloatingNav } from "@/app/_components/floating-nav";
 import { AnimatedSection } from "@/app/_components/animated-section";
-import { Home, ImageIcon, User, ListTodo } from "lucide-react";
 
 const navItems = [
   {
     name: "Home",
-    link: "/",
+    link: "/littlespace",
     icon: <Home className="h-4 w-4 text-pink-500" />,
   },
   {
-    name: "Photos",
-    link: "/#photos",
-    icon: <ImageIcon className="h-4 w-4 text-pink-500" />,
-  },
-  {
     name: "Memories",
-    link: "/memories",
+    link: "/littlespace/memories",
     icon: <Camera className="h-4 w-4 text-pink-500" />,
   },
   {
-    name: "About Us",
-    link: "/#about",
-    icon: <User className="h-4 w-4 text-pink-500" />,
-  },
-  {
     name: "Tasks",
-    link: "/tasks",
+    link: "/littlespace/tasks",
     icon: <ListTodo className="h-4 w-4 text-pink-500" />,
   },
 ];

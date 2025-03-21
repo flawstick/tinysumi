@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
+  Camera,
   CheckCircle,
   Clock,
   PauseCircle,
@@ -15,84 +15,44 @@ import {
 import { motion } from "framer-motion";
 import { FloatingNav } from "@/app/_components/floating-nav";
 import { Home, ListTodo, Heart } from "lucide-react";
-
-// Define task status types
-type TaskStatus = "todo" | "in_progress" | "paused" | "completed";
-
-// Define task interface
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  dueDate?: string;
-}
+import { api } from "@/trpc/react";
+import { type Task } from "@/lib/types";
 
 const navItems = [
   {
     name: "Home",
-    link: "/",
+    link: "/littlespace",
     icon: <Home className="h-4 w-4 text-pink-500" />,
   },
   {
+    name: "Memories",
+    link: "/littlespace/memories",
+    icon: <Camera className="h-4 w-4 text-pink-500" />,
+  },
+  {
     name: "Tasks",
-    link: "/tasks",
+    link: "/littlespace/tasks",
     icon: <ListTodo className="h-4 w-4 text-pink-500" />,
   },
 ];
 
 export default function TasksPage() {
   const router = useRouter();
+  const utils = api.useUtils();
 
-  // Initial tasks
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 1,
-      title: "Plan date night",
-      description: "Choose a restaurant and movie for our next date night",
-      status: "todo",
-      dueDate: "2023-12-15",
-    },
-    {
-      id: 2,
-      title: "Buy groceries",
-      description: "Get ingredients for dinner: pasta, sauce, garlic bread",
-      status: "todo",
-      dueDate: "2023-12-10",
-    },
-    {
-      id: 3,
-      title: "Call parents",
-      description: "Check in with mom and dad this weekend",
-      status: "todo",
-      dueDate: "2023-12-12",
-    },
-    {
-      id: 4,
-      title: "Schedule dentist appointment",
-      description: "Call Dr. Smith's office for a checkup",
-      status: "todo",
-      dueDate: "2023-12-20",
-    },
-    {
-      id: 5,
-      title: "Finish reading book",
-      description: "Complete the novel we started together",
-      status: "todo",
-    },
-  ]);
+  // Fetch tasks using tRPC
+  const { data: tasks = [] } = api.tasks.fetchTasks.useQuery();
 
-  // Function to update task status
-  const updateTaskStatus = (taskId: number, newStatus: TaskStatus) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task,
-      ),
-    );
-  };
+  // Update task status mutation
+  const updateTaskStatus = api.tasks.updateTaskStatus.useMutation({
+    onSuccess: () => {
+      // Invalidate and refetch tasks after successful update
+      utils.tasks.fetchTasks.invalidate();
+    },
+  });
 
   // Get status badge color
-  const getStatusColor = (status: TaskStatus) => {
+  const getStatusColor = (status: Task["status"]) => {
     switch (status) {
       case "todo":
         return "bg-gray-200 text-gray-800";
@@ -108,7 +68,7 @@ export default function TasksPage() {
   };
 
   // Get status text
-  const getStatusText = (status: TaskStatus) => {
+  const getStatusText = (status: Task["status"]) => {
     switch (status) {
       case "todo":
         return "To Do";
@@ -123,6 +83,16 @@ export default function TasksPage() {
     }
   };
 
+  // Format date helper
+  const formatDate = (date: Date | null) => {
+    if (!date) return null;
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-20">
       <FloatingNav navItems={navItems} />
@@ -133,7 +103,7 @@ export default function TasksPage() {
             <Button
               variant="ghost"
               className="mr-4 p-2 text-pink-700 hover:bg-pink-100 hover:text-pink-800"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/littlespace")}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -200,7 +170,7 @@ export default function TasksPage() {
                       </p>
                       {task.dueDate && (
                         <p className="text-xs text-gray-500">
-                          Due: {task.dueDate}
+                          Due: {formatDate(task.dueDate)}
                         </p>
                       )}
                     </div>
@@ -212,7 +182,10 @@ export default function TasksPage() {
                           variant="outline"
                           className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 sm:w-auto"
                           onClick={() =>
-                            updateTaskStatus(task.id, "in_progress")
+                            updateTaskStatus.mutate({
+                              taskId: task.id,
+                              status: "in_progress",
+                            })
                           }
                         >
                           <PlayCircle className="mr-1 h-4 w-4" />
@@ -226,7 +199,12 @@ export default function TasksPage() {
                             size="sm"
                             variant="outline"
                             className="w-full border-yellow-200 text-yellow-600 hover:bg-yellow-50 sm:w-auto"
-                            onClick={() => updateTaskStatus(task.id, "paused")}
+                            onClick={() =>
+                              updateTaskStatus.mutate({
+                                taskId: task.id,
+                                status: "paused",
+                              })
+                            }
                           >
                             <PauseCircle className="mr-1 h-4 w-4" />
                             Pause
@@ -236,7 +214,10 @@ export default function TasksPage() {
                             variant="outline"
                             className="w-full border-green-200 text-green-600 hover:bg-green-50 sm:w-auto"
                             onClick={() =>
-                              updateTaskStatus(task.id, "completed")
+                              updateTaskStatus.mutate({
+                                taskId: task.id,
+                                status: "completed",
+                              })
                             }
                           >
                             <CheckCircle className="mr-1 h-4 w-4" />
@@ -252,7 +233,10 @@ export default function TasksPage() {
                             variant="outline"
                             className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 sm:w-auto"
                             onClick={() =>
-                              updateTaskStatus(task.id, "in_progress")
+                              updateTaskStatus.mutate({
+                                taskId: task.id,
+                                status: "in_progress",
+                              })
                             }
                           >
                             <PlayCircle className="mr-1 h-4 w-4" />
@@ -263,7 +247,10 @@ export default function TasksPage() {
                             variant="outline"
                             className="w-full border-green-200 text-green-600 hover:bg-green-50 sm:w-auto"
                             onClick={() =>
-                              updateTaskStatus(task.id, "completed")
+                              updateTaskStatus.mutate({
+                                taskId: task.id,
+                                status: "completed",
+                              })
                             }
                           >
                             <CheckCircle className="mr-1 h-4 w-4" />
@@ -277,7 +264,12 @@ export default function TasksPage() {
                           size="sm"
                           variant="outline"
                           className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 sm:w-auto"
-                          onClick={() => updateTaskStatus(task.id, "todo")}
+                          onClick={() =>
+                            updateTaskStatus.mutate({
+                              taskId: task.id,
+                              status: "todo",
+                            })
+                          }
                         >
                           Reopen
                         </Button>

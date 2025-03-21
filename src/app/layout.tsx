@@ -27,7 +27,11 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <SessionProvider>
-            <ThemeProvider attribute="class" defaultTheme="light">
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="ligth"
+              forcedTheme="light"
+            >
               {children}
             </ThemeProvider>
           </SessionProvider>

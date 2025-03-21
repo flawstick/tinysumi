@@ -4,6 +4,8 @@ import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { tasks } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
+// Add this constant at the top with the other constants
+const allowedStatuses = ["todo", "in_progress", "paused", "completed"] as const;
 
 export const tasksRouter = createTRPCRouter({
   // Mutation: Only "daddy" can add new tasks.
@@ -12,6 +14,8 @@ export const tasksRouter = createTRPCRouter({
       z.object({
         title: z.string(),
         description: z.string().optional(),
+        priority: z.string().optional(),
+        status: z.string().optional(),
         dueDate: z.string().optional(),
       }),
     )
@@ -29,6 +33,8 @@ export const tasksRouter = createTRPCRouter({
           title: input.title,
           description: input.description,
           dueDate: input.dueDate ? new Date(input.dueDate) : null,
+          status: input.status ?? "todo",
+          priority: input.priority ?? "medium",
           createdById: ctx.session.user.id,
         })
         .returning();
@@ -44,6 +50,8 @@ export const tasksRouter = createTRPCRouter({
         title: z.string().optional(),
         description: z.string().optional(),
         dueDate: z.string().optional(),
+        priority: z.string().optional(),
+        status: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -60,6 +68,8 @@ export const tasksRouter = createTRPCRouter({
           title: input.title,
           description: input.description,
           dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+          priority: input.priority,
+          status: input.status,
         })
         .where(eq(tasks.id, input.taskId))
         .returning();
@@ -90,12 +100,48 @@ export const tasksRouter = createTRPCRouter({
       return deletedTask;
     }),
 
-  // Query: Only users with role "tiny" can fetch tasks.
+  // New mutation: "tiny" and "daddy" can update task status
+  updateTaskStatus: protectedProcedure
+    .input(
+      z.object({
+        taskId: z.string(),
+        status: z.enum(allowedStatuses),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check if user has permission
+      if (!["tiny", "daddy"].includes(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only tiny and daddy can update task status.",
+        });
+      }
+
+      const updatedTask = await db
+        .update(tasks)
+        .set({
+          status: input.status,
+          updatedAt: new Date(), // Update the timestamp
+        })
+        .where(eq(tasks.id, input.taskId))
+        .returning();
+
+      if (!updatedTask.length) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Task not found",
+        });
+      }
+
+      return updatedTask[0];
+    }),
+
+  // Query: Only users with role "tiny" or "daddy" can fetch tasks.
   fetchTasks: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.session.user.role) {
+    if (!fetchRoles.includes(ctx?.session?.user?.role)) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: "Only users with role tiny are allowed to fetch tasks.",
+        message: `Only users with roles ${fetchRoles.toString()} are allowed to fetch tasks.`,
       });
     }
 
@@ -104,3 +150,6 @@ export const tasksRouter = createTRPCRouter({
     return allTasks;
   }),
 });
+
+// List of roles that can fetch tasks
+const fetchRoles: string[] = ["tiny", "daddy"];

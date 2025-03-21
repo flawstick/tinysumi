@@ -7,8 +7,6 @@ import {
   Calendar,
   Music,
   Home,
-  ImageIcon,
-  User,
   ListTodo,
   ChevronDown,
 } from "lucide-react";
@@ -22,17 +20,17 @@ import { useRef } from "react";
 const navItems = [
   {
     name: "Home",
-    link: "/",
+    link: "/littlespace",
     icon: <Home className="h-4 w-4 text-pink-500" />,
   },
   {
     name: "Memories",
-    link: "/memories",
+    link: "/littlespace/memories",
     icon: <Camera className="h-4 w-4 text-pink-500" />,
   },
   {
     name: "Tasks",
-    link: "/tasks",
+    link: "/littlespace/tasks",
     icon: <ListTodo className="h-4 w-4 text-pink-500" />,
   },
 ];

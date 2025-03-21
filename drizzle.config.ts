@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ["tinysumi_*"],
+  tablesFilter: ["tiny_sumi_*"],
 } satisfies Config;

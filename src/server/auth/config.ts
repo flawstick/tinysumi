@@ -1,5 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import { eq } from "drizzle-orm";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { db } from "@/server/db";
@@ -31,6 +32,8 @@ declare module "next-auth" {
     user: {
       id: string;
       role: UserRole;
+      lastSeen?: string;
+      metadata: Record<string, any> & { lastSeenTasks?: string };
     } & DefaultSession["user"];
   }
 
@@ -65,12 +68,20 @@ export const authConfig = {
     signIn: async ({ account }) => {
       return allowedUsers.includes(account!.providerAccountId.toString());
     },
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: async ({ session, user }) => {
+      // Update lastSeen whenever a session is checked
+      await db
+        .update(users)
+        .set({ lastSeen: new Date() })
+        .where(eq(users.id, user.id));
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
+    },
   },
 } satisfies NextAuthConfig;

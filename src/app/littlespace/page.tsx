@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -21,11 +21,13 @@ import {
   Camera,
   ListTodo,
   ArrowRight,
+  Loader2,
   Home,
 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { TaskPriority, type Task } from "@/lib/types";
 import { FloatingNav } from "../_components/floating-nav";
+import { useSession } from "next-auth/react";
 
 const navItems = [
   {
@@ -46,10 +48,28 @@ const navItems = [
 ];
 
 export default function LittleSpacePage() {
-  const [showGreeting, setShowGreeting] = useState(true);
+  const { data: tasks = [], isLoading: isTasksLoading } =
+    api.tasks.fetchTasks.useQuery();
+  const { data: lastSeenData } = api.tasks.getLastSeenTasks.useQuery();
+  const updateLastSeen = api.tasks.updateLastSeenTasks.useMutation();
+  const session = useSession();
+  const [showGreeting, setShowGreeting] = useState(false);
 
-  // Fetch tasks using tRPC
-  const { data: tasks = [] } = api.tasks.fetchTasks.useQuery();
+  useLayoutEffect(() => {
+    if (session.data?.user.role === "tiny") {
+      const lastSeenDate = lastSeenData?.lastSeenTasks
+        ? new Date(lastSeenData.lastSeenTasks as string).getDate()
+        : null;
+      const currentDate = new Date().getDate();
+
+      if (lastSeenDate !== currentDate) {
+        setShowGreeting(true);
+      }
+    }
+
+    // Update the last seen timestamp when showing greeting
+    updateLastSeen.mutate({});
+  }, [session.data, lastSeenData]);
 
   // Sample memories data (TODO: Implement memories feature)
   const memories = [
@@ -154,7 +174,7 @@ export default function LittleSpacePage() {
           >
             <div className="mx-auto mb-6 h-24 w-24 overflow-hidden rounded-full border-4 border-pink-300 shadow-lg">
               <Image
-                src="/placeholder.svg?height=96&width=96"
+                src="/hk.gif"
                 alt="Sumi"
                 width={96}
                 height={96}
@@ -230,50 +250,60 @@ export default function LittleSpacePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="space-y-4">
-                {todaysTasks.map((task) => {
-                  const priorityStyle = getPriorityStyle(task.priority as TaskPriority);
-                  return (
-                    <div key={task.id} className="flex items-start gap-3">
-                      <div
-                        className={`mt-0.5 rounded-full p-1 ${
-                          task.status === "completed"
-                            ? "bg-green-100"
-                            : priorityStyle.bg
-                        }`}
-                      >
-                        {task.status === "completed" ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Clock className={`h-4 w-4 ${priorityStyle.icon}`} />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p
-                          className={`font-medium ${
+              {isTasksLoading ? (
+                <div className="flex h-40 items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {todaysTasks.map((task) => {
+                    const priorityStyle = getPriorityStyle(
+                      task.priority as TaskPriority,
+                    );
+                    return (
+                      <div key={task.id} className="flex items-start gap-3">
+                        <div
+                          className={`mt-0.5 rounded-full p-1 ${
                             task.status === "completed"
-                              ? "text-gray-400 line-through"
-                              : "text-gray-700"
+                              ? "bg-green-100"
+                              : priorityStyle.bg
                           }`}
                         >
-                          {task.title}
-                        </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-pink-400" />
-                          <p className="text-xs text-pink-600">
-                            Due: {formatDate(task.dueDate)}
-                          </p>
+                          {task.status === "completed" ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Clock
+                              className={`h-4 w-4 ${priorityStyle.icon}`}
+                            />
+                          )}
                         </div>
+                        <div className="flex-1">
+                          <p
+                            className={`font-medium ${
+                              task.status === "completed"
+                                ? "text-gray-400 line-through"
+                                : "text-gray-700"
+                            }`}
+                          >
+                            {task.title}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <Calendar className="h-3 w-3 text-pink-400" />
+                            <p className="text-xs text-pink-600">
+                              Due: {formatDate(task.dueDate)}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          className={`${priorityStyle.bg} ${priorityStyle.text}`}
+                        >
+                          {task.priority}
+                        </Badge>
                       </div>
-                      <Badge
-                        className={`${priorityStyle.bg} ${priorityStyle.text}`}
-                      >
-                        {task.priority}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="border-t border-pink-100 pt-4">
               <Link href="/littlespace/tasks" className="w-full">
@@ -289,7 +319,7 @@ export default function LittleSpacePage() {
           </Card>
 
           {/* Memories overview */}
-          <Card className="border-pink-200 shadow-md">
+          {/*<Card className="border-pink-200 shadow-md">
             <CardHeader className="border-b border-pink-100 pb-2">
               <CardTitle className="flex items-center text-xl text-pink-700">
                 <Camera className="mr-2 h-5 w-5 text-pink-500" />
@@ -336,7 +366,7 @@ export default function LittleSpacePage() {
                 </Button>
               </Link>
             </CardFooter>
-          </Card>
+          </Card>*/}
         </div>
 
         {/* Affirmation card */}

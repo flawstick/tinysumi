@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { db } from "@/server/db";
-import { tasks } from "@/server/db/schema";
+import { tasks, users } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 // Add this constant at the top with the other constants
 const allowedStatuses = ["todo", "in_progress", "paused", "completed"] as const;
@@ -148,6 +148,68 @@ export const tasksRouter = createTRPCRouter({
     // Query the tasks as defined by the existing schema
     const allTasks = await db.select().from(tasks);
     return allTasks;
+  }),
+
+  // New route to update lastSeenTasks
+  updateLastSeenTasks: protectedProcedure
+    .input(
+      z.object({
+        timestamp: z.string().optional(), // Optional - will use current time if not provided
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!["tiny", "daddy"].includes(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only tiny and daddy can update last seen tasks.",
+        });
+      }
+
+      const timestamp = input.timestamp ?? new Date().toISOString();
+
+      const updatedUser = await db
+        .update(users)
+        .set({
+          metadata: {
+            ...ctx.session.user.metadata, // Preserve existing metadata
+            lastSeenTasks: timestamp,
+          },
+        })
+        .where(eq(users.id, ctx.session.user.id))
+        .returning();
+
+      if (!updatedUser.length) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      return {
+        lastSeenTasks: timestamp,
+      };
+    }),
+
+  // Optional: Add a route to get the last seen timestamp
+  getLastSeenTasks: protectedProcedure.query(async ({ ctx }) => {
+    if (!["tiny", "daddy"].includes(ctx.session.user.role)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only tiny and daddy can view last seen tasks.",
+      });
+    }
+
+    const user = await db
+      .select({
+        metadata: users.metadata,
+      })
+      .from(users)
+      .where(eq(users.id, ctx.session.user.id))
+      .limit(1);
+
+    return {
+      lastSeenTasks: user[0]?.metadata?.lastSeenTasks ?? null,
+    };
   }),
 });
 

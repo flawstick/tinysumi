@@ -31,12 +31,16 @@ export const users = createTable("user", {
     withTimezone: true,
   }).default(sql`CURRENT_TIMESTAMP`),
   image: varchar("image", { length: 255 }),
-  role: varchar("role", { length: 50 }).default("user").notNull(), // 'admin' or 'user'
+  role: varchar("role", { length: 50 }).default("user").notNull(),
   username: varchar("username", { length: 100 }).unique(),
-  password: varchar("password", { length: 255 }), // Hashed password
+  password: varchar("password", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
+  lastSeen: timestamp("last_seen", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .$onUpdate(() => new Date()),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
 });
 
 export const tasks = createTable("task", {

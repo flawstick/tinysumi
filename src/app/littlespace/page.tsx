@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -55,20 +55,24 @@ export default function LittleSpacePage() {
   const session = useSession();
   const [showGreeting, setShowGreeting] = useState(false);
 
-  useLayoutEffect(() => {
-    if (session.data?.user.role === "tiny") {
-      const lastSeenDate = lastSeenData?.lastSeenTasks
-        ? new Date(lastSeenData.lastSeenTasks as string).getDate()
-        : null;
-      const currentDate = new Date().getDate();
+  useEffect(() => {
+    (async () => {
+      if (session.data?.user.role === "tiny") {
+        const lastSeenDate = (await lastSeenData?.lastSeenTasks)
+          ? new Date(lastSeenData?.lastSeenTasks as string).getDate()
+          : null;
+        const currentDate = new Date().getDate();
 
-      if (lastSeenDate !== currentDate) {
-        setShowGreeting(true);
+        if (lastSeenDate === null) return;
+
+        if (lastSeenDate !== currentDate) {
+          setShowGreeting(true);
+        }
       }
-    }
 
-    // Update the last seen timestamp when showing greeting
-    updateLastSeen.mutate({});
+      // Update the last seen timestamp when showing greeting
+      updateLastSeen.mutate({});
+    })().catch(console.error);
   }, [session.data, lastSeenData]);
 
   // Sample memories data (TODO: Implement memories feature)

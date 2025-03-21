@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 import { FloatingNav } from "@/app/_components/floating-nav";
 import { Home, ListTodo, Heart } from "lucide-react";
 import { api } from "@/trpc/react";
-import { type Task } from "@/lib/types";
+import { TaskStatus, type Task } from "@/lib/types";
 
 const navItems = [
   {
@@ -45,9 +45,9 @@ export default function TasksPage() {
 
   // Update task status mutation
   const updateTaskStatus = api.tasks.updateTaskStatus.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate and refetch tasks after successful update
-      utils.tasks.fetchTasks.invalidate();
+      await utils.tasks.fetchTasks.invalidate();
     },
   });
 
@@ -161,8 +161,10 @@ export default function TasksPage() {
                         >
                           {task.title}
                         </h3>
-                        <Badge className={getStatusColor(task.status)}>
-                          {getStatusText(task.status)}
+                        <Badge
+                          className={getStatusColor(task.status as TaskStatus)}
+                        >
+                          {getStatusText(task.status as TaskStatus)}
                         </Badge>
                       </div>
                       <p className="mb-2 text-sm text-gray-600">

@@ -50,7 +50,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                   </div>
                   {task.dueDate && (
                     <div className="mt-1 text-xs text-muted-foreground md:hidden">
-                      Due: {formatDate(task.dueDate)}
+                      Due: {formatDate(task.dueDate.toISOString())}
                     </div>
                   )}
                 </div>
@@ -62,7 +62,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                 <TaskBadges.Priority priority={task.priority} />
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {formatDate(task.dueDate)}
+                {formatDate(task.dueDate?.toISOString())}
               </TableCell>
               <TableCell className="text-right">
                 <TaskActions task={task} onEdit={onEdit} onDelete={onDelete} />

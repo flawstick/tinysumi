@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useRef, forwardRef } from "react";
+import { useRef, forwardRef, type RefObject } from "react";
 import { motion, useInView } from "framer-motion";
 
 interface AnimatedSectionProps {
@@ -14,8 +14,11 @@ interface AnimatedSectionProps {
 export const AnimatedSection = forwardRef<HTMLDivElement, AnimatedSectionProps>(
   ({ children, className = "", delay = 0.2, id }, ref) => {
     const localRef = useRef(null);
-    const actualRef = ref || localRef;
-    const isInView = useInView(actualRef, { once: true, margin: "-100px" });
+    const actualRef = ref ?? localRef;
+    const isInView = useInView(actualRef as RefObject<Element>, {
+      once: true,
+      margin: "-100px",
+    });
 
     return (
       <motion.div

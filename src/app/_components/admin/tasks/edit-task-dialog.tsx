@@ -17,13 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type { EditTask, TaskPriority, TaskStatus } from "@/lib/types";
 
 interface EditTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  editingTask: Task | null;
-  setEditingTask: (task: Task | null) => void;
+  editingTask: EditTask | null;
+  setEditingTask: (task: EditTask | null) => void;
   onSaveEdit: () => void;
 }
 

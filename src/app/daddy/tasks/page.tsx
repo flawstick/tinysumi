@@ -26,7 +26,7 @@ export default function AdminTasks() {
     dueDate: "",
   });
 
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<EditTask | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -83,12 +83,12 @@ export default function AdminTasks() {
     if (!editingTask) return;
 
     const editTaskData: EditTask = {
-      taskId: editingTask.id,
+      taskId: editingTask.taskId,
       title: editingTask.title,
       description: editingTask.description,
       status: editingTask.status,
       priority: editingTask.priority,
-      dueDate: editingTask.dueDate?.toISOString(),
+      dueDate: editingTask.dueDate,
     };
 
     editTaskMutation.mutate(editTaskData);
@@ -100,7 +100,11 @@ export default function AdminTasks() {
   };
 
   const handleEditTask = (task: Task) => {
-    setEditingTask(task);
+    setEditingTask({
+      ...task,
+      taskId: task.id,
+      dueDate: task.dueDate.toISOString(),
+    });
     setIsEditDialogOpen(true);
   };
 

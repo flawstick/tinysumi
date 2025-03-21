@@ -24,7 +24,7 @@ import {
   Home,
 } from "lucide-react";
 import { api } from "@/trpc/react";
-import { type Task } from "@/lib/types";
+import { TaskPriority, type Task } from "@/lib/types";
 import { FloatingNav } from "../_components/floating-nav";
 
 const navItems = [
@@ -232,7 +232,7 @@ export default function LittleSpacePage() {
             <CardContent className="pt-6">
               <div className="space-y-4">
                 {todaysTasks.map((task) => {
-                  const priorityStyle = getPriorityStyle(task.priority);
+                  const priorityStyle = getPriorityStyle(task.priority as TaskPriority);
                   return (
                     <div key={task.id} className="flex items-start gap-3">
                       <div

@@ -37,12 +37,10 @@ export const authRouter = createTRPCRouter({
 
       try {
         const params = new URLSearchParams({
-          client_id: process.env.DISCORD_CLIENT_ID!,
-          client_secret: process.env.DISCORD_CLIENT_SECRET!,
+          client_id: process.env.AUTH_DISCORD_ID!,
+          client_secret: process.env.AUTH_DISCORD_CLIENT!,
           grant_type: "authorization_code",
           code: input.code,
-          // Must match the redirect URI used on the client side
-          redirect_uri: process.env.DISCORD_REDIRECT_URI!,
         });
 
         const tokenResponse = await fetch(
@@ -151,7 +149,7 @@ export const authRouter = createTRPCRouter({
           await db
             .update(users)
             .set({
-              lastSeen: new Date().toISOString(),
+              lastSeen: new Date(),
               name: discordUser.username,
               image: discordUser.avatar
                 ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`

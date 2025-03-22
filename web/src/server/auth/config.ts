@@ -83,22 +83,5 @@ export const authConfig = {
         },
       };
     },
-    // Add redirect callback to handle mobile authentication
-    redirect: async ({ url, baseUrl }) => {
-      // Check if this is a mobile authentication request
-      const isMobile =
-        url.includes("mobile=true") || url.includes("platform=mobile");
-
-      if (isMobile) {
-        // For mobile auth, redirect back to the main site, which will trigger our listener
-        return `${baseUrl}/?auth=success`;
-      }
-
-      // Default behavior for web - stick with your original logic
-      if (url.startsWith(baseUrl)) {
-        return url;
-      }
-      return baseUrl;
-    },
   },
 } satisfies NextAuthConfig;

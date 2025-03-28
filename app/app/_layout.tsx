@@ -13,6 +13,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getSession } from "@/util/auth";
+import { AuthProvider } from "@/components/useAuth";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -21,7 +22,6 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
-  const segments = useSegments();
 
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -57,27 +57,29 @@ export default function RootLayout() {
         router.replace("/");
       }
     }
-  }, [session, loaded, segments, router]);
+  }, [session, loaded]);
 
   if (!loaded) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-        <Stack.Screen
-          name="auth/index"
-          options={{
-            headerShown: true,
-            title: "Log In",
-            headerBlurEffect: "light",
-          }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+          <Stack.Screen
+            name="auth/index"
+            options={{
+              headerShown: true,
+              title: "Log In",
+              headerBlurEffect: "light",
+            }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

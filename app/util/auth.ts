@@ -1,8 +1,10 @@
-import * as WebBrowser from "expo-web-browser";
-import axios from "axios";
+// utils/auth.ts
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
 
+// Base URL of your API endpoint
+export const API_URL = "http://10.0.0.17:3000/api";
+
+// Define your custom session type based on your output
 export interface SessionUser {
   id: string;
   name: string | null;
@@ -20,120 +22,85 @@ export interface SessionUser {
 export interface Session {
   sessionToken: string;
   userId: string;
-  expires: string;
+  expires: string; // ISO date string
   user: SessionUser;
 }
 
+// Key to store session data securely
 const SESSION_KEY = "auth_session";
-const API_URL = "https://tinysumi.com/api/auth";
 
-// Configure axios to include credentials
-axios.defaults.withCredentials = true;
-
-// Initialize WebBrowser
-WebBrowser.maybeCompleteAuthSession();
-
-export const signIn = async (): Promise<Session | null> => {
-  try {
-    // Create a specific auth URL with mobile flag
-    const authUrl = `${API_URL}/signin?platform=mobile`;
-
-    // The URL to watch for (this corresponds to the redirect URL in NextAuth config)
-    const successUrl = "https://tinysumi.com/?auth=success";
-
-    console.log("Opening auth browser session to:", authUrl);
-
-    // Open the auth browser
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, successUrl, {
-      showInRecents: true,
-      dismissButtonStyle: "done",
-      preferEphemeralSession: false,
-    });
-
-    console.log("Auth browser result:", result);
-
-    // Check if we got a success result (redirect to our successUrl happened)
-    if (result.type === "success") {
-      // Give the system a moment to complete the auth process
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Now try to fetch the session
-      const session = await fetchSession();
-      console.log("Session after auth:", session ? "Success" : "Failed");
-
-      if (session) {
-        await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
-        return session;
-      }
-    } else {
-      console.log("Auth was not successful or was canceled");
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Error in signIn:", error);
-    return null;
-  }
-};
-
-export const fetchSession = async (): Promise<Session | null> => {
-  try {
-    // Different approach based on platform
-    const options =
-      Platform.OS === "ios" ? { headers: { "Cache-Control": "no-cache" } } : {};
-
-    // Try to get the session with proper credentials
-    const response = await axios.get(`${API_URL}/session`, {
-      ...options,
-      withCredentials: true,
-    });
-
-    if (response.data?.user) {
-      return response.data as Session;
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching session:", error);
-    return null;
-  }
-};
-
+// Function to retrieve a stored session
 export const getSession = async (): Promise<Session | null> => {
   try {
-    // First check local storage
     const storedSession = await SecureStore.getItemAsync(SESSION_KEY);
-
     if (storedSession) {
-      const parsedSession = JSON.parse(storedSession) as Session;
-
-      // Check if session is expired
-      const expiryDate = new Date(parsedSession.expires);
-      if (expiryDate > new Date()) {
-        // Not expired, we can use it
-        return parsedSession;
+      const session = JSON.parse(storedSession) as Session;
+      // Check for local expiration
+      if (new Date(session.expires) < new Date()) {
+        await SecureStore.deleteItemAsync(SESSION_KEY);
+        return null;
       }
+      return session;
     }
-
-    // If no stored session or expired, try fetching from server
-    return await fetchSession();
+    return null;
   } catch (error) {
-    console.error("Error retrieving session:", error);
+    console.error("Get session error:", error);
     return null;
   }
 };
 
-export const signOut = async (): Promise<void> => {
+export async function getSessionTokenAsync(): Promise<string | null> {
+  const session = await getSession();
+  return session?.sessionToken ?? null;
+}
+
+// Simple sign in with username only
+export const signIn = async (username: string): Promise<Session | null> => {
   try {
-    await axios.post(`${API_URL}/signout`);
-    await SecureStore.deleteItemAsync(SESSION_KEY);
+    console.log(`Signing in with username: ${username}`);
+
+    const response = await fetch(`${API_URL}/eauth/discord-callback`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username }),
+    });
+
+    console.log(`Sign in response status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Sign in error: ${response.status} - ${errorText}`);
+
+      if (response.status === 404) {
+        console.error(`User "${username}" not found`);
+      }
+
+      return null;
+    }
+
+    const sessionData = (await response.json()) as Session;
+    console.log(`Session received for: ${sessionData.user.username}`);
+
+    if (sessionData && sessionData.sessionToken) {
+      await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(sessionData));
+      return sessionData;
+    }
+
+    return null;
   } catch (error) {
-    console.error("Sign-out error:", error);
-    // Still delete local session
-    await SecureStore.deleteItemAsync(SESSION_KEY);
+    console.error("Sign in error:", error);
+    return null;
   }
 };
 
-export const isAuthenticated = async (): Promise<boolean> => {
-  const session = await getSession();
-  return !!session;
+// Sign out by calling your API and clearing the stored session
+export const signOut = async (): Promise<void> => {
+  try {
+    await SecureStore.deleteItemAsync(SESSION_KEY);
+    console.log("Signed out successfully");
+  } catch (error) {
+    console.error("Sign out error:", error);
+  }
 };

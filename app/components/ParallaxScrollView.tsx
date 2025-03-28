@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactElement } from "react";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import Animated, {
   interpolate,
   useAnimatedRef,
@@ -10,6 +10,10 @@ import Animated, {
 import { ThemedView } from "@/components/ThemedView";
 import { useBottomTabOverflow } from "@/components/ui/TabBarBackground";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { signOut } from "@/util/auth";
+import { router } from "expo-router";
+import tw from "twrnc";
+import { Feather } from "@expo/vector-icons";
 
 const HEADER_HEIGHT = 200;
 
@@ -49,6 +53,15 @@ export default function ParallaxScrollView({
       ],
     };
   });
+  const handleLogout = async () => {
+    try {
+      signOut();
+      // Navigate back to auth screen
+      router.replace("/auth");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -72,6 +85,13 @@ export default function ParallaxScrollView({
             {avatarImage}
           </Animated.View>
         )}
+        {/* Logout Button */}
+        <Pressable
+          onPress={handleLogout}
+          style={tw`absolute right-2 top-2 bg-white rounded-full p-2 shadow-sm border-pink-800`}
+        >
+          <Feather name="log-out" size={24} color="#be185d" />
+        </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
       </Animated.ScrollView>
     </ThemedView>

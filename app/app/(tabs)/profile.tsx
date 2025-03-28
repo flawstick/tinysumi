@@ -1,4 +1,4 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign, Feather, FontAwesome } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -42,7 +42,7 @@ export default function HomeScreen() {
         {/* Header Content */}
         <Animated.View
           entering={FadeInDown}
-          style={tw`items-center px-5 pt-10`}
+          style={tw`items-center px-5 pt-10 relative`}
         >
           <Text style={tw`text-3xl font-bold text-pink-800 mt-5`}>
             Hi, I'm Sumi!

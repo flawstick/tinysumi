@@ -76,9 +76,11 @@ export async function POST(request: NextRequest) {
     }
 
     const discordUser = await userResponse.json();
+    // make json into string
+    const userString = JSON.stringify(discordUser.id);
 
     // 4. Check that the Discord user is allowed to sign in
-    if (!allowedUsers.includes(discordUser.id)) {
+    if (!allowedUsers.includes(userString)) {
       return NextResponse.json(
         { error: "User is not authorized" },
         { status: 403 },
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(accounts.provider, "discord"),
-          eq(accounts.providerAccountId, discordUser.id),
+          eq(accounts.providerAccountId, userString),
         ),
       );
 
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
         await db
           .update(users)
           .set({
-            lastSeen: new Date().toISOString(),
+            lastSeen: new Date(),
             name: discordUser.username,
             image: discordUser.avatar
               ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
@@ -133,40 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!userRecord) {
-      // Create a new user
-      const newUserRecords = await db
-        .insert(users)
-        .values({
-          name: discordUser.username,
-          email:
-            discordUser.email || `${discordUser.id}@discord.placeholder.com`,
-          image: discordUser.avatar
-            ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-            : null,
-          role: "tiny", // or "daddy" based on your business logic
-          username: discordUser.username,
-          createdAt: new Date().toISOString(),
-          lastSeen: new Date().toISOString(),
-          metadata: {},
-        })
-        .returning();
-
-      userRecord = newUserRecords[0] as User;
-
-      // Create the account record linking Discord to this user
-      await db.insert(accounts).values({
-        userId: userRecord.id,
-        type: "oauth" as const,
-        provider: "discord",
-        providerAccountId: discordUser.id,
-        access_token,
-        refresh_token,
-        expires_at: expires_in
-          ? Math.floor(Date.now() / 1000) + expires_in
-          : null,
-        token_type: tokenData.token_type,
-        scope: tokenData.scope,
-      });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     } else if (!existingAccount) {
       // If user exists but account doesn't (rare case), create the account link
       await db.insert(accounts).values({

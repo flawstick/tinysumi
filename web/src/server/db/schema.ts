@@ -102,6 +102,44 @@ export const favorites = createTable("favorite", {
     .notNull(),
 });
 
+export const pushNotificationTokens = createTable("push_notification_token", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  expoToken: varchar("expo_token", { length: 255 }).notNull(),
+  deviceName: varchar("device_name", { length: 255 }),
+  isValid: boolean("is_valid").default(true).notNull(),
+  sessionToken: varchar("session_token", { length: 255 }).references(
+    () => sessions.sessionToken,
+  ),
+  lastUsed: timestamp("last_used", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const notifications = createTable("notification", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: text("body"),
+  type: varchar("type", { length: 50 }).notNull(), // 'task', 'memory', 'system', etc.
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // 'pending', 'sent', 'failed'
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional data like taskId, memoryId, etc.
+  sentToTokens: jsonb("sent_to_tokens").$type<string[]>().default([]), // Array of push notification token IDs that received this notification
+  scheduledFor: timestamp("scheduled_for", { withTimezone: true }), // For scheduled notifications
+  sentAt: timestamp("sent_at", { withTimezone: true }), // When the notification was actually sent
+  readAt: timestamp("read_at", { withTimezone: true }), // When the user read the notification
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
 export const phoneLocations = createTable("phone_location", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
@@ -189,6 +227,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   memories: many(memories),
   favorites: many(favorites),
   phoneLocations: many(phoneLocations),
+  pushNotificationTokens: many(pushNotificationTokens),
+  notifications: many(notifications),
 }));
 
 export const tasksRelations = relations(tasks, ({ one }) => ({
@@ -238,10 +278,36 @@ export const phoneLocationsRelations = relations(phoneLocations, ({ one }) => ({
   }),
 }));
 
+export const pushNotificationTokensRelations = relations(
+  pushNotificationTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [pushNotificationTokens.userId],
+      references: [users.id],
+    }),
+    session: one(sessions, {
+      fields: [pushNotificationTokens.sessionToken],
+      references: [sessions.sessionToken],
+    }),
+  }),
+);
+
+export const notificationsRelations = relations(
+  notifications,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [notifications.userId],
+      references: [users.id],
+    }),
+    sentToDevices: many(pushNotificationTokens),
+  }),
+);
+
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }));
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
+export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
+  pushNotificationTokens: many(pushNotificationTokens),
 }));

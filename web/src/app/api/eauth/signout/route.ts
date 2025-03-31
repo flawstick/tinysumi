@@ -1,198 +1,53 @@
-// app/api/auth/discord-callback/route.ts
-import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
-import { users, sessions, accounts } from "@/server/db/schema";
-import { eq, and } from "drizzle-orm";
-import crypto from "crypto";
-import type { InferSelectModel } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { pushNotificationTokens, sessions } from "@/server/db/schema";
+import { NextRequest, NextResponse } from "next/server";
 
-// Type definitions based on your schema
-type User = InferSelectModel<typeof users>;
-type Account = InferSelectModel<typeof accounts>;
-
-// List of allowed Discord user IDs (as strings)
-const allowedUsers = ["678386127899590659", "647127398961250316"];
-
+/**
+ * Handle signout - clean up push notification tokens
+ * This would be used in addition to your normal signout handler
+ */
 export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sessionToken = authHeader.substring(7);
+
+  if (!sessionToken) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
   try {
-    // 1. Get input from request body
-    const body = await request.json();
-    const { code, state } = body;
-
-    if (!code || !state) {
-      return NextResponse.json(
-        { error: "Missing required parameters" },
-        { status: 400 },
-      );
-    }
-
-    // 2. Exchange the authorization code for an access token
-    const params = new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID!,
-      client_secret: process.env.DISCORD_CLIENT_SECRET!,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: process.env.DISCORD_REDIRECT_URI!,
+    // Find the session
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.sessionToken, sessionToken),
+      with: { user: true },
     });
 
-    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params.toString(),
-    });
-
-    if (!tokenResponse.ok) {
-      console.error(`Token error: ${tokenResponse.status}`);
-      return NextResponse.json(
-        { error: "Failed to exchange code for token" },
-        { status: 500 },
-      );
+    if (!session) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    const tokenData = await tokenResponse.json();
-    const { access_token, refresh_token, expires_in } = tokenData;
+    // Invalidate all push notification tokens for this session
+    await db
+      .update(pushNotificationTokens)
+      .set({ isValid: false })
+      .where(eq(pushNotificationTokens.sessionToken, sessionToken));
 
-    if (!access_token) {
-      return NextResponse.json(
-        { error: "No access token received" },
-        { status: 500 },
-      );
-    }
+    // Delete session from databsae
+    await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
 
-    // 3. Fetch Discord user information
-    const userResponse = await fetch("https://discord.com/api/users/@me", {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-
-    if (!userResponse.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch user information" },
-        { status: 500 },
-      );
-    }
-
-    const discordUser = await userResponse.json();
-    // make json into string
-    const userString = JSON.stringify(discordUser.id);
-
-    // 4. Check that the Discord user is allowed to sign in
-    if (!allowedUsers.includes(userString)) {
-      return NextResponse.json(
-        { error: "User is not authorized" },
-        { status: 403 },
-      );
-    }
-
-    // 5. Look up user by Discord provider account
-    const existingAccounts = await db
-      .select()
-      .from(accounts)
-      .where(
-        and(
-          eq(accounts.provider, "discord"),
-          eq(accounts.providerAccountId, userString),
-        ),
-      );
-
-    const existingAccount = existingAccounts[0] as Account | undefined;
-
-    let userRecord: User | undefined;
-
-    if (existingAccount) {
-      // Get user from the existing account
-      const userRecords = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, existingAccount.userId));
-
-      userRecord = userRecords[0] as User | undefined;
-
-      // Update the user's information
-      if (userRecord) {
-        await db
-          .update(users)
-          .set({
-            lastSeen: new Date(),
-            name: discordUser.username,
-            image: discordUser.avatar
-              ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-              : userRecord.image,
-          })
-          .where(eq(users.id, userRecord.id));
-
-        // Get the updated user record
-        const updatedUserRecords = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userRecord.id));
-
-        userRecord = updatedUserRecords[0] as User;
-      }
-    }
-
-    if (!userRecord) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    } else if (!existingAccount) {
-      // If user exists but account doesn't (rare case), create the account link
-      await db.insert(accounts).values({
-        userId: userRecord.id,
-        type: "oauth" as const,
-        provider: "discord",
-        providerAccountId: discordUser.id,
-        access_token,
-        refresh_token,
-        expires_at: expires_in
-          ? Math.floor(Date.now() / 1000) + expires_in
-          : null,
-        token_type: tokenData.token_type,
-        scope: tokenData.scope,
-      });
-    } else {
-      // Update the existing account with fresh tokens
-      await db
-        .update(accounts)
-        .set({
-          access_token,
-          refresh_token,
-          expires_at: expires_in
-            ? Math.floor(Date.now() / 1000) + expires_in
-            : existingAccount.expires_at,
-          token_type: tokenData.token_type,
-          scope: tokenData.scope,
-        })
-        .where(
-          and(
-            eq(accounts.provider, "discord"),
-            eq(accounts.providerAccountId, discordUser.id as string),
-          ),
-        );
-    }
-
-    // 6. Create a session record in the database
-    const sessionToken = crypto.randomUUID();
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    await db.insert(sessions).values({
-      sessionToken,
-      userId: userRecord.id,
-      expires,
-    });
-
-    // 7. Return the session data
     return NextResponse.json({
-      sessionToken,
-      userId: userRecord.id,
-      expires: expires.toISOString(),
-      user: userRecord,
+      success: true,
+      message: "Signed out and invalidated push notification tokens",
     });
   } catch (error) {
-    console.error("Discord callback error:", error);
+    console.error("Error during signout:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to process signout" },
       { status: 500 },
     );
   }

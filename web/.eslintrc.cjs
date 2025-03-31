@@ -28,6 +28,7 @@ const config = {
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
     "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/prefer-optional-chain": "off",
     "@typescript-eslint/no-misused-promises": [
       "error",
       {

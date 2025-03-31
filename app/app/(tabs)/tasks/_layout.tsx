@@ -1,27 +1,27 @@
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { CalendarIcon } from "lucide-react-native";
-import { Pressable, View, Modal, Text, TouchableOpacity } from "react-native";
+import { Stack, useRouter } from "expo-router";
 import "react-native-reanimated";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import twrnc from "twrnc";
-import { useState, useCallback } from "react";
-import { Calendar } from "react-native-calendars";
-import { format } from "date-fns";
+import { TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-// Pink theme colors
-const COLORS = {
-  primary: "#ec4899", // Pink accent color
-  primaryLight: "#fce7f3", // Light pink for backgrounds
-  primaryDark: "#be185d", // Darker pink for text
-  background: "#fdf2f8", // Very light pink background
+const CustomBackButton = () => {
+  const router = useRouter();
+  return (
+    <TouchableOpacity
+      onPress={() => router.dismissTo("/tasks")}
+      style={{
+        marginLeft: 8,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "rgba(236, 72, 153, 0.1)",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Ionicons name="chevron-back" size={24} color="#ec4899" />
+    </TouchableOpacity>
+  );
 };
-
-SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
@@ -31,21 +31,21 @@ export default function RootLayout() {
         options={{
           headerShown: true,
           headerBlurEffect: "prominent",
-          headerLargeTitle: true,
-          headerLargeStyle: { backgroundColor: "transparent" },
+          headerLargeTitle: false,
           headerLargeTitleStyle: { color: "#333" },
-          headerTintColor: "#ec4899",
+          animation: "slide_from_left",
+          headerLeft: () => null,
+          headerBackButtonDisplayMode: undefined,
           title: "Tasks",
         }}
       />
       <Stack.Screen
-        name="[taskId]"
+        name="task"
         options={{
           title: "Task",
           headerBlurEffect: "prominent",
           headerTintColor: "#ec4899",
-          headerBackButtonDisplayMode: "default",
-          headerBackButtonMenuEnabled: true,
+          headerLeft: () => <CustomBackButton />,
         }}
       />
     </Stack>

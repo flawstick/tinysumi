@@ -15,6 +15,17 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { getSession } from "@/util/auth";
 import { AuthProvider } from "@/components/useAuth";
 
+import * as Notifications from "expo-notifications";
+
+// handle incoming notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 

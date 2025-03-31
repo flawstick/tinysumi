@@ -1,24 +1,26 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Little Space",
+    "slug": "tinysumi",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/tiny.png",
     "scheme": "tinysumi",
     "linking": {
       "prefixes": ["tinysumi://", "https://tinysumi.com"]
     },
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.flawstick.tinysumi"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.flawstick.tinysumi"
     },
     "web": {
       "bundler": "metro",
@@ -30,16 +32,28 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/tiny-bg.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#fddde6"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/tiny.png",
+          "sounds": ["default"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e3efd23e-caa3-4904-84e6-835077dfba95"
+      }
     }
   }
 }

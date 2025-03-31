@@ -105,8 +105,10 @@ export default function LittleSpacePage() {
             progressBackgroundColor="#fff"
           />
         }
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustContentInsets={true}
       >
-        <SafeAreaView style={[twrnc`flex-1 py-7`]}>
+        <View style={twrnc`flex-1`}>
           {/* Daily Overview section */}
           <View style={twrnc`mb-8 rounded-xl overflow-hidden shadow-sm`}>
             <HeaderCard
@@ -160,7 +162,7 @@ export default function LittleSpacePage() {
                     {index > 0 && <Separator />}
                     <TaskItem
                       task={task}
-                      onPress={() => router.push(`/(index)/${task.id}`)}
+                      onPress={() => router.push(`/tasks/task/${task.id}`)}
                     />
                   </React.Fragment>
                 ))}
@@ -200,7 +202,7 @@ export default function LittleSpacePage() {
               </Text>
             </View>
           </View>
-        </SafeAreaView>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

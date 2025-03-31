@@ -18,17 +18,6 @@ export default function RootLayout() {
           title: "Little Space",
         }}
       />
-
-      <Stack.Screen
-        name="[taskId]"
-        options={{
-          title: "Task",
-          headerBlurEffect: "prominent",
-          headerTintColor: "#ec4899",
-          headerBackButtonDisplayMode: "default",
-          headerBackButtonMenuEnabled: true,
-        }}
-      />
     </Stack>
   );
 }

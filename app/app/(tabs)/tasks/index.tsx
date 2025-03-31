@@ -305,9 +305,7 @@ export default function TasksPage() {
   const completedTasks = tasks.filter((task) => task.status === "completed");
 
   // Handler for adding a new task
-  const handleAddTask = () => {
-    router.push("/tasks/new");
-  };
+  const handleAddTask = () => {};
 
   async function onRefresh() {
     setRefreshing(true);
@@ -343,6 +341,7 @@ export default function TasksPage() {
                 progressBackgroundColor="#fff"
               />
             }
+            contentInsetAdjustmentBehavior="automatic"
           >
             {/* Todo tasks section */}
             {todoTasks.length > 0 && (
@@ -356,7 +355,7 @@ export default function TasksPage() {
                       {index > 0 && <Separator />}
                       <TaskItem
                         task={task}
-                        onPress={() => router.push(`/tasks/${task.id}`)}
+                        onPress={() => router.push(`/tasks/task/${task.id}`)}
                       />
                     </React.Fragment>
                   ))}
@@ -379,7 +378,7 @@ export default function TasksPage() {
                       {index > 0 && <Separator />}
                       <TaskItem
                         task={task}
-                        onPress={() => router.push(`/tasks/${task.id}`)}
+                        onPress={() => router.push(`/tasks/task/${task.id}`)}
                       />
                     </React.Fragment>
                   ))}
@@ -399,7 +398,7 @@ export default function TasksPage() {
                       {index > 0 && <Separator />}
                       <TaskItem
                         task={task}
-                        onPress={() => router.push(`/tasks/${task.id}`)}
+                        onPress={() => router.push(`/tasks/task/${task.id}`)}
                       />
                     </React.Fragment>
                   ))}
@@ -422,7 +421,7 @@ export default function TasksPage() {
                       {index > 0 && <Separator />}
                       <TaskItem
                         task={task}
-                        onPress={() => router.push(`/tasks/${task.id}`)}
+                        onPress={() => router.push(`/tasks/task/${task.id}`)}
                       />
                     </React.Fragment>
                   ))}

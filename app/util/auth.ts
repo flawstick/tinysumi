@@ -1,8 +1,9 @@
 // utils/auth.ts
 import * as SecureStore from "expo-secure-store";
+import { apiPost } from "./api";
 
 // Base URL of your API endpoint
-export const API_URL = "http://10.0.0.17:3000/api";
+export const API_URL = "https://tinysumi.com/api";
 
 // Define your custom session type based on your output
 export interface SessionUser {
@@ -98,6 +99,7 @@ export const signIn = async (username: string): Promise<Session | null> => {
 // Sign out by calling your API and clearing the stored session
 export const signOut = async (): Promise<void> => {
   try {
+    await apiPost("/eauth/signout", {});
     await SecureStore.deleteItemAsync(SESSION_KEY);
     console.log("Signed out successfully");
   } catch (error) {

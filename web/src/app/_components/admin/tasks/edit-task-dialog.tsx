@@ -73,10 +73,10 @@ export function EditTaskDialog({
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-dueDate">Due Date (Optional)</Label>
+              <Label htmlFor="edit-dueDate">Due Date & Time (Optional)</Label>
               <Input
                 id="edit-dueDate"
-                type="date"
+                type="datetime-local"
                 value={editingTask.dueDate}
                 onChange={(e) =>
                   setEditingTask({ ...editingTask, dueDate: e.target.value })

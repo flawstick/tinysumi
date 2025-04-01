@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import type { NewTask, TaskPriority, TaskStatus } from "@/lib/types";
+import { toJerusalemTime, toUTC } from "@/lib/utils";
 
 interface AddTaskDialogProps {
   isOpen: boolean;
@@ -68,59 +69,53 @@ export function AddTaskDialog({
               placeholder="Enter task description"
               rows={3}
             />
+            <Input
+              id="dueDate"
+              type="datetime-local"
+              value={toJerusalemTime(newTask.dueDate!)}
+              onChange={(e) =>
+                setNewTask({ ...newTask, dueDate: toUTC(e.target.value) })
+              }
+            />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date & Time (Optional)</Label>
-              <Input
-                id="dueDate"
-                type="datetime-local"
-                value={newTask.dueDate}
-                onChange={(e) =>
-                  setNewTask({ ...newTask, dueDate: e.target.value })
-                }
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select
+              value={newTask.priority}
+              onValueChange={(value: TaskPriority) =>
+                setNewTask({ ...newTask, priority: value })
+              }
+            >
+              <SelectTrigger id="priority">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={newTask.priority}
-                onValueChange={(value: TaskPriority) =>
-                  setNewTask({ ...newTask, priority: value })
-                }
-              >
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={newTask.status}
-                onValueChange={(value: TaskStatus) =>
-                  setNewTask({ ...newTask, status: value })
-                }
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={newTask.status}
+              onValueChange={(value: TaskStatus) =>
+                setNewTask({ ...newTask, status: value })
+              }
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>

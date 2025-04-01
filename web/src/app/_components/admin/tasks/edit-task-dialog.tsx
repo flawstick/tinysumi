@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { EditTask, TaskPriority, TaskStatus } from "@/lib/types";
+import { toJerusalemTime, toUTC } from "@/lib/utils";
 
 interface EditTaskDialogProps {
   isOpen: boolean;
@@ -77,9 +78,12 @@ export function EditTaskDialog({
               <Input
                 id="edit-dueDate"
                 type="datetime-local"
-                value={editingTask.dueDate}
+                value={toJerusalemTime(editingTask.dueDate!)}
                 onChange={(e) =>
-                  setEditingTask({ ...editingTask, dueDate: e.target.value })
+                  setEditingTask({
+                    ...editingTask,
+                    dueDate: toUTC(e.target.value),
+                  })
                 }
               />
             </div>

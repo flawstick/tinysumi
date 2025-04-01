@@ -3,6 +3,10 @@ import { tasksRouter } from "./routers/tasks";
 import { bibleRouter } from "./routers/bible";
 
 /**
+ * register trigger.dev jobs
+ */
+
+/**
  * This is the primary router for your server.
  *
  * All routers added in /api/routers should be manually added here.

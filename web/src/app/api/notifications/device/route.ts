@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const existingToken = await db.query.pushNotificationTokens.findFirst({
       where: and(
         eq(pushNotificationTokens.userId, user.id),
-        eq(pushNotificationTokens.sessionToken, sessionToken),
+        eq(pushNotificationTokens.expoToken, expoToken),
       ),
     });
 

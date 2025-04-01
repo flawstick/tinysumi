@@ -140,6 +140,19 @@ export const notifications = createTable("notification", {
     .notNull(),
 });
 
+export const dailyAffirmations = createTable("daily_affirmation", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  content: text("content").notNull(),
+  date: timestamp("date", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  type: varchar("type", { length: 50 }).default("tiny").notNull(), // For different types of affirmations if needed
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+});
+
 export const phoneLocations = createTable("phone_location", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
